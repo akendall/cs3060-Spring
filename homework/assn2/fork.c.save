@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+int childParent(){
+	pid_t child_pid;
+	child_pid = fork();
+	if(child_pid !=0){
+	  printf("PARENT Started. Now waiting for process %d\n", child_pid);
+	  wait();
+	  printf("PARENT resumed. Child exit code of %d. Now terminating parent\n", 0);
+	}else{
+	  printf("CHILD Started. No arguments provided. Terminating child\n");
+	}
+	return 0;
+}
+
+//spawn a child process running a new program
+int spawn (char* program, int current){
+	pid_t child_pid;
+	/*duplicate this process*/
+	child_pid = fork();
+	if (child_pid != 0){
+	  /*this is the parent process.*/
+	  printf("PARENT started. now waiting on child%d", child_pid);
+	  wait();
+	  printf("PARENT resumed. Child exit code of %d. Now terminating parent", child_pid);
+	  return child_pid;
+	}else{
+	  printf("CHILD STARTED. ");
+	  /*now execute PROGRAM, searching for it in the path*/
+	  execvp(program, NULL);
+	  /*The execvp function returns only if an error occurs*/
+	  fprintf(stderr, "an error occurred in execvp\n");
+	  abort();
+	}
+}
+
+int main (int argc, char *argv[]){
+	/*no argmuments*/
+	if(argc <= 1){
+	  childParent();
+   	  return 0;
+	}else{
+	  while(i<argc){
+		spawn(argv[i], i);
+	  }
+	}
+	/*the argument list to pass to the "ls" command.*/
+	char* arg_list[] = {
+		"ls",	/*argv[0], the name of the program*/
+		"-l",
+		"/",
+		NULL	/*the argument list must end with a NULL*/
+	};
+	/*Spawn a child process running the "ls" command. Ignore the 
+	  returned child process id.*/
+	spawn("ls", arg_list);
+	printf("done with main program\n");
+	return 0;
+}
